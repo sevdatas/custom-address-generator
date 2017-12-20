@@ -6,6 +6,7 @@ import org.bitcoinj.params.MainNetParams;
 
 public class Generator extends Thread {
 	public int id;
+
 	public Generator(int _id) {
 		this.id = _id;
 	}
@@ -13,13 +14,26 @@ public class Generator extends Thread {
 	public void run() {
 		String addressString = "";
 		String keyString = null;
-		while (!addressString.startsWith("1Must") && !addressString.startsWith("1MUST")) {
+
+		while (!this.control(addressString)) {
 			ECKey key = new ECKey();
 			Address address = new Address(MainNetParams.get(), key.getPubKeyHash());
 			keyString = key.getPrivateKeyAsWiF(MainNetParams.get());
 			addressString = address.toBase58();
-			
+			if (Parameter.stop) {
+				return;
+			}
 		}
-		System.out.println(String.valueOf(this.id).concat(" ").concat(keyString.concat(" ").concat(addressString)));
+		System.out.println(String.valueOf(keyString.concat(" ").concat(addressString)));
+		Parameter.stop = true;
+	}
+
+	public boolean control(String value) {
+		for (String param : Parameter.list) {
+			if (value.startsWith(param)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
